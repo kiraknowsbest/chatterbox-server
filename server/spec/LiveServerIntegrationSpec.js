@@ -9,14 +9,14 @@ describe('REAL: server', function() {
     });
   });
 
-  xit('should send back parsable stringified JSON', function(done) {
+  it('should send back parsable stringified JSON', function(done) {
     request('http://127.0.0.1:3000/classes/messages', function(error, response, body) {
       expect(JSON.parse.bind(this, body)).to.not.throw();
       done();
     });
   });
 
-  xit('should send back an object', function(done) {
+  it('should send back an object', function(done) {
     request('http://127.0.0.1:3000/classes/messages', function(error, response, body) {
       parsedBody = JSON.parse(body);
       expect(parsedBody).to.be.an('object');
@@ -24,7 +24,7 @@ describe('REAL: server', function() {
     });
   });
 
-  xit('should send an object containing a `results` array', function(done) {
+  it('should send an object containing a `results` array', function(done) {
     request('http://127.0.0.1:3000/classes/messages', function(error, response, body) {
       parsedBody = JSON.parse(body);
       expect(parsedBody).to.be.an('object');
@@ -33,9 +33,9 @@ describe('REAL: server', function() {
     });
   });
 
-  xit('should accept POST requests to /send', function(done) {
+  it('should accept POST requests to /send', function(done) {
     var requestParams = {method: 'POST',
-      uri: 'http://127.0.0.1:3000/classes/messages',
+      url: 'http://127.0.0.1:3000/classes/messages',
       json: {
         username: 'Jono',
         message: 'Do my bidding!'}
@@ -49,7 +49,7 @@ describe('REAL: server', function() {
 
   it('should respond with messages that were previously posted', function(done) {
     var requestParams = {method: 'POST',
-      uri: 'http://127.0.0.1:3000/classes/messages',
+      url: 'http://127.0.0.1:3000/classes/messages',
       json: {
         username: 'Jono',
         message: 'Do my bidding!'}

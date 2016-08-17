@@ -11,8 +11,43 @@ this file and include it in basic-server.js so that it actually works.
 *Hint* Check out the node module documentation at http://nodejs.org/api/modules.html.
 
 **************************************************************/
+var utils = require('./utils');
 
-var requestHandler = function(request, response) {
+var objectId = 0;
+var messages = [];
+
+var actions = {
+  'GET': function ( request, response ) {
+    utils.sendResponse(response, {results: messages});
+  },
+  'POST': function ( request, response ) {
+    utils.collectData( request, function ( message ) {
+      message.objectId = ++objectId;
+      messages.push( message );
+      utils.sendResponse(response, {objectId: message.objectId}, 201);
+    });
+  },
+  'OPTIONS': function ( request, response ) {
+    utils.sendResponse(response, null);
+  }
+};
+
+exports.requestHandler = utils.makeActionHandler( actions );
+
+
+
+// Fred deleted this code from his solution and altered by calling utils.makeActionHandler
+// module.exports = function(request, response) {
+  
+//   var action = actions[request.method];
+//     if ( action ) {
+//       action( request, response );
+//     } else {
+//       utils.sendResponse( response, 'Not Found', 404);
+//     }
+
+// };
+
   // Request and Response come from node's http module.
 
 /*
@@ -49,71 +84,91 @@ RESPONSE:  { _ended: false,
   // Adding more logging to your server can be an easy way to get passive
   // debugging help, but you should always be careful about leaving stray
   // console.logs in your code.
-  console.log('Serving request type ' + request.method + ' for url ' + request.url);
 
-  var headers = request.headers;
-  var method = request.method;
-  var url = request.url;
-  var body = [];
-
-  request.on('error', function (error) {
-    console.error(error);
-  }).on('data', function (data) {
-    body.push(data);
-  }).on('end', function() {
-    body = Buffer.concat(body).toString();
-  });
-
-  response.on('error', function (error) {
-    console.error(error);
-  });
-
-
-  //'/classes/messages'
-
-  if ( method === 'POST' && url === '/send' ) {
-    
-  }
-
-  // The outgoing status.
-  var statusCode = 200;
-
-  // See the note below about CORS headers.
-  var headers = defaultCorsHeaders;
-
-  // Tell the client we are sending them plain text.
-  //
-  // You will need to change this if you are sending something
-  // other than plain text, like JSON or HTML.
-  headers['Content-Type'] = 'application/json';
-
-  // .writeHead() writes to the request line and headers of the response,
-  // which includes the status and all headers.
-  response.writeHead(statusCode, headers);
-
-  console.log('BODY: ', body);
-
-  var responseBody = {
-    headers: headers,
-    method: method,
-    url: url,
-    results: body
-  };
+//   var storage = [];
+//   var headers = defaultCorsHeaders;
+//   var method = request.method;
+//   var url = request.url;
+//   var body = [];
   
-  // body of response is stringified to JSON
-  response.write(JSON.stringify(responseBody));
-  response.end();
-  // Make sure to always call response.end() - Node may not send
-  // anything back to the client until you do. The string you pass to
-  // response.end() will be the body of the response - i.e. what shows
-  // up in the browser.
-  //
-  // Calling .end "flushes" the response's internal buffer, forcing
-  // node to actually send all the data over to the client.
-  //response.end('Hello, World!');
+//   // var requestParams = {method: 'POST',
+//   //   url: 'http://127.0.0.1:3000/classes/messages',
+//   //   json: {
+//   //     username: 'Jono',
+//   //     message: 'Do my bidding!'}
+//   // };
 
-  // return JSON.stringify(response);
-};
+//   //the outgoing status
+//   // The outgoing status.
+
+//   // See the note below about CORS headers.
+
+//   // Tell the client we are sending them plain text.
+//   //
+//   // You will need to change this if you are sending something
+//   // other than plain text, like JSON or HTML.
+//   // .writeHead() writes to the request line and headers of the response,
+//   // which includes the status and all headers.
+
+
+//   var createResponse = function (request, response) {
+//     var statusCode = 200;
+//     headers['Content-Type'] = 'application/json';
+//     response.statusCode = statusCode;
+
+//     if ( method === 'POST' && url === '/classes/messages' ) {
+//       statusCode = 201;
+//       storage.push({
+//         username: request.json.username,
+//         message: request.json.message
+//       });
+      
+//     } else if ( method === 'GET' && url === '/classes/messages' ) {
+    
+//     }
+//     body = storage;
+
+//     var responseBody = {
+//       headers: headers,
+//       method: method,
+//       url: url,
+//       results: body
+//     };
+
+//     sendResponse( responseBody );
+
+//   };
+
+//   var sendResponse = function ( resBody ) {
+//     response.end(JSON.stringify( resBody ));
+//   };
+//   // body of response is stringified to JSON
+//   // Make sure to always call response.end() - Node may not send
+//   // anything back to the client until you do. The string you pass to
+//   // response.end() will be the body of the response - i.e. what shows
+//   // up in the browser.
+//   //
+//   // Calling .end "flushes" the response's internal buffer, forcing
+//   // node to actually send all the data over to the client.
+
+
+//   request.on('error', function (error) {
+//     statusCode = 404;
+//     console.error(error);
+//   }).on('data', function (data) {
+//     body.push(data);
+//   }).on('end', function() {
+//     body = Buffer.concat(body).toString();
+//     createResponse( request, response );
+//   });
+
+//   response.on('error', function (error) {
+//     statusCode = 404;
+//     console.error(error);
+//   });
+
+
+// };
 
 // These headers will allow Cross-Origin Resource Sharing (CORS).
 // This code allows this server to talk to websites that
@@ -124,12 +179,3 @@ RESPONSE:  { _ended: false,
 //
 // Another way to get around this restriction is to serve you chat
 // client from this domain by setting up static file serving.
-var defaultCorsHeaders = {
-  'access-control-allow-origin': '*',
-  'access-control-allow-methods': 'GET, POST, PUT, DELETE, OPTIONS',
-  'access-control-allow-headers': 'content-type, accept',
-  'access-control-max-age': 10 // Seconds.
-};
-
-exports.requestHandler = requestHandler;
-
